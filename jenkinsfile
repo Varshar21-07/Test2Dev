@@ -1,29 +1,54 @@
-pipeline {
-    agent any
-    tools {
-        maven 'Maven' 
-    }
-    stages {
-        stage('Build') {
-            steps {
-                bat 'mvn clean package'
-            }
-        }
-        stage('Test') {
-            steps {
-                bat 'mvn test'
-            }
-        }
-        stage('Run JAR') {
-            steps {
-                script {
-                    // Run the JAR file and capture the output
-                    def output = bat(script: 'java -jar target/simple-java-project-1.0-SNAPSHOT.jar', returnStdout: true).trim()
+// pipeline {
+//     agent any
+//     tools {
+//         maven 'Maven' 
+//     }
+//     stages {
+//         stage('Build') {
+//             steps {
+//                 bat 'mvn clean package'
+//             }
+//         }
+//         stage('Test') {
+//             steps {
+//                 bat 'mvn test'
+//             }
+//         }
+//         stage('Run JAR') {
+//             steps {
+//                 script {
+//                     // Run the JAR file and capture the output
+//                     def output = bat(script: 'java -jar target/simple-java-project-1.0-SNAPSHOT.jar', returnStdout: true).trim()
 
-                    // Print the output to Jenkins console
-                    echo "Output from JAR: ${output}"
-                }
-            }
-        }
-    }
-}
+//                     // Print the output to Jenkins console
+//                     echo "Output from JAR: ${output}"
+//                 }
+//             }
+//         }
+//     }
+// }
+pipeline:
+  agent: any
+  stages:
+    - stage: "Checkout Code"
+      steps:
+        - script: git clone https://github.com/your-repo/java-project.git
+
+    - stage: "Build"
+      steps:
+        - script: mvn clean package -DskipTests
+
+    - stage: "Test"
+      steps:
+        - script: mvn test
+
+    - stage: "Deploy"
+      steps:
+        - script: scp target/*.war user@server:/deploy/path/
+        - script: ssh user@server "systemctl restart tomcat"
+
+post:
+  success:
+    - script: echo "Deployment successful!"
+  failure:
+    - script: echo "Deployment failed!"
